@@ -116,36 +116,7 @@
   (define even? (lambda(x)(if (zero? x) #t (odd? (- x 1)))))
   (define odd? (lambda(x)(if (zero? x) #f (even? (- x 1)))))
   (if (even? x) 0 1))
-; conclusion:
-; letrec and local define allow code to refer to variables
-; that are initialized later,but the expressions for each binding still evaluated in order
 
-; The semantics for letrec requires that the use of z for initializing y refers to the z in the letrec, but
-; the expression for z (the 13) has not been evaluated yet. In this situation, Racket will raise an error when
-; bad-letrec is called. (Prior to Racket Version 6.1, it would instead bind y to a special “undefined” object,
-; which almost always just had the effect of hiding a bug
-(define (bad-letrec x)
-  (letrec ([y z]
-           [z 13])
-    (if x y z)))
-
-
-; Bindings are generally mutable---use set!
-; Doing so affects all code that has this x in its environment.
-(define b 3)
-(define f (lambda (x) (* 1 (+ x b))))
-(define c (+ b 4))
-(set! b 5)
-(define z (f 4))
-(define w c)
-
-; This code makes the b in the function body refer to
-; a local b that is initialized to the global b.
-(define f2
-  (let ([b b])
-    (lambda (x) (* 1 (+ x b)))))
-
-
-
+    
 
               
