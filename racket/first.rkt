@@ -145,7 +145,60 @@
   (let ([b b])
     (lambda (x) (* 1 (+ x b)))))
 
+; delayed evaluation and thunks
 
+; (define (my-if-bad x y z) (if x y z))
+; (define (factorial-wrong x)
+;   (my-if-bad (= x 0)
+;              1
+;              (* x (factorial-wrong(- x 1)))))
+
+(define (my-if x y z)(if x (y) (z)))
+
+(define (factorial x)
+  (my-if (= x 0)
+         (lambda () 1)
+         (lambda () (* x (factorial (- x 1))))))
+
+; lazy evaluation with delay and force
+(define (my-delay f)
+  (mcons #f f))
+
+(define (my-force th)
+  (if (mcar th)
+      (mcdr th)
+      (begin (set-mcar! th #t)
+             (set-mcdr! th ((mcdr th)))
+             (mcdr th))))
+
+; multiply the result of two expressions e1 and e2 using arecursive algorithm
+; Now calling (my-mult e1 e2) evaluates e1 and e2 once each and then does 0 or more additions
+; But what if e1 evaluates to 0 and e2 takes a long time to compute?
+; Then evaluating e2 was wasteful
+(define (my-mult x y)
+  (cond [(= x 0) 0]
+        [(= x 1) y]
+        [#t (+ y (my-mult (- x 1) y))]))
+
+; thunk it
+; Now we would call (my-mult e1 (lambda () e2))
+(define (my-mult-thunk x y-thunk)
+  (cond [(= x 0) 0]
+        [(= x 1) (y-thunk)]
+        [#t (+ (y-thunk)(my-mult-thunk (- x 1) y-thunk))]))
+
+; let’s use my-delay and my-force to get the best of both worlds:
+; (my-mult-thunk e1 (let ([x (my-delay (lambda () e2))]) (lambda () (my-force x))))
+
+  
+; stream
+(define ones (lambda () (cons 1 ones)))
+(define nats
+  (letrec ([f (lambda (x) (cons x (lambda () (f (+ x 1)))))])
+    (lambda () (f 1))))
+(define powers-of-two
+  (letrec ([f (lambda (x) (cons x (lambda () (f (* x 2)))))])
+    (lambda () (f 2))))
 
 
               
