@@ -192,13 +192,76 @@
 
   
 ; stream
-(define ones (lambda () (cons 1 ones)))
+(define ones
+  (lambda () (cons 1 ones)))
+
 (define nats
   (letrec ([f (lambda (x) (cons x (lambda () (f (+ x 1)))))])
     (lambda () (f 1))))
+
 (define powers-of-two
   (letrec ([f (lambda (x) (cons x (lambda () (f (* x 2)))))])
     (lambda () (f 2))))
+; function that takes a stream and a predicate-function and returns how many
+; stream elements are produced before the predicate-function returns true
+(define (number-until stream tester)
+  (letrec ([f (lambda (stream ans)
+                (let ([pr (stream)])
+                  (if (tester (car pr))
+                      ans
+                      (f (cdr pr)(+ ans 1)))))])
+    (f stream 1)))
+; (number-until powers-of-two (lambda (x) (= x 16)))
+
+; all the streams above can produce their next element given at most their previous element
+; higher order functions to reuse common functionality
+(define (stream-maker fn arg)
+  (letrec ([f (lambda (x)
+                (cons x (lambda () (f (fn x arg)))))])
+    (lambda () (f arg))))
+
+(define ones- (stream-maker (lambda (x y) 1) 1))
+(define nats- (stream-maker + 1))
+(define powers-of-two- (stream-maker * 2))  
+    
+  
+; Memoization
+(define (fibonacci_1 x)
+  (if (or (= x 1) (= x 2))
+      1
+      (+ (fibonacci_1 (- x 1))
+         (fibonacci_1 (- x 2)))))
+
+; taking a “count up” approach
+;that remembers previous answers:
+(define (fibonacci_2 x)
+  (letrec ([f (lambda (acc1 acc2 y)
+                (if (= y x)
+                    (+ acc1 acc2)
+                    (f (+ acc1 acc2) acc1 (+ y 1))))])
+    (if (or (= x 1)(= x 2))
+        1
+        (f 1 1 3))))
+
+; use assoc library
+(define fibonacci
+  (letrec ([memo null]
+           [f (lambda (x)
+                (let ([ans (assoc x memo)])
+                  (if ans
+                      (cdr ans)
+                      (let ([new-ans (if (or (= x 1)(= x 2))
+                                         1
+                                         (+ (f (- x 1))
+                                            (f (- x 2))))])
+                        (begin
+                          (set! memo (cons (cons x new-ans) memo))
+                          new-ans)))))])
+    f))
+
+                            
+              
+  
 
 
               
