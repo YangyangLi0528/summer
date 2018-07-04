@@ -23,7 +23,15 @@
 ;; Problem 1
 
 ;; CHANGE (put your solutions here)
-
+(define (racketlist -> mupllist list)
+  (if (null? list)
+      (aunit)
+      (apair (car list)(racketlist -> mupllist (cdr list)))))
+                 
+(define (mupllist -> racketlist list)
+  (if (aunit? list)
+      (aunit)
+      (apair (car list)(racketlist -> mupllist (cdr list)))))
 ;; Problem 2
 
 ;; lookup a variable in an environment
